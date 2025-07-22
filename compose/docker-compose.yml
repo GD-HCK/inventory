@@ -1,0 +1,74 @@
+name: inventory-${VERSION_NUMBER}
+services:
+  sql:
+    build:
+      context: ../images/sql  # Use the current directory as the build context
+      args:
+        ACCEPT_EULA: ${ACCEPT_EULA} # Accept the EULA
+        MSSQL_PID: ${MSSQL_PID} # Specify the SQL Server edition
+        MSSQL_MEMORY_LIMIT_MB: ${MSSQL_MEMORY_LIMIT_MB}
+        MSSQL_CONTAINER_IMAGE_TAG: ${MSSQL_CONTAINER_IMAGE_TAG}
+        MSSQL_CONTAINER_SERVICE_PORT: ${MSSQL_CONTAINER_SERVICE_PORT}
+        SECRETS_PATH: /docker_files/compose-secrets
+        SECRETS_ID: compose-secrets
+      secrets:
+        - compose-secrets  # Use the secrets file for sensitive data
+    restart: unless-stopped  # Restart policy
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+    healthcheck:
+      test: [ "CMD-SHELL", "pgrep sqlservr > /dev/null || exit 1" ]
+      interval: 5s
+      retries: 1
+    networks:
+      - inventory  # Network for SQL service
+  api:
+    build:
+      context: ../images/api  # Build context
+      args:
+        PYROSCOPE_INGESTION_ENDPOINT: ${PYROSCOPE_INGESTION_ENDPOINT}  # Build argument for Pyroscope ingestion endpoint
+        OTLP_PREFIX: ${OTLP_PREFIX}  # Build argument for OpenTelemetry prefix
+        OTLP_ENDPOINT_PORT: ${OTLP_ENDPOINT_PORT}  # Build argument for OpenTelemetry endpoint port
+        OTLP_ENDPOINT_HOST: ${OTLP_ENDPOINT_HOST}  # Build argument for OpenTelemetry endpoint host
+        JWT_LIFETIME_MINUTES: ${JWT_LIFETIME_MINUTES}  # Build argument for JWT token lifetime
+        MSSQL_SERVER_SERVICE_NAME: ${MSSQL_SERVER_SERVICE_NAME}
+        ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+        WEB_DNS: ${WEB_DNS}
+        WEB_SCHEME_HTTPS: ${WEB_SCHEME_HTTPS}
+        WEB_CONTAINER_SERVICE_PORT_HTTPS: ${WEB_CONTAINER_SERVICE_PORT_HTTPS}
+        ASPNETCORE_BUILD_CONTAINER_IMAGE_TAG: ${ASPNETCORE_BUILD_CONTAINER_IMAGE_TAG}
+        ASPNETCORE_RUN_CONTAINER_IMAGE_TAG: ${ASPNETCORE_RUN_CONTAINER_IMAGE_TAG}
+        WEB_USER: ${WEB_USER}
+        VERSION_NUMBER: ${VERSION_NUMBER}
+        LOG_LEVEL: ${LOG_LEVEL}
+        SECRETS_PATH: /docker_files/compose-secrets
+        SECRETS_ID: compose-secrets
+      secrets:
+        - compose-secrets  # Use the secrets file for sensitive data
+    ports:
+      - "${WEB_CONTAINER_SERVICE_PORT_HTTPS}:8443"  # Map the container port to the host port
+    volumes:
+      - ${DATA_PROTECTION_ENCRYPTION_KEY_PATH}:/app/DataProtection-Keys  # Volume for Data Protection keys
+      - ${DATA_PROTECTION_ENCRYPTION_CERT_PATH}:/app/DataProtection-Cert  # Volume for Data Protection certificates
+    networks:
+      - inventory  # Network for web service
+    healthcheck:
+      test: ["CMD","curl", "-f", "${WEB_SCHEME_HTTPS}://${WEB_DNS}/api/${API_VERSION}/health"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+    extra_hosts:
+      - "${WEB_DNS}:127.0.0.1"  # Add example.com to resolve to 127.0.0.1
+
+volumes:
+  inventory-aspnetcore-keys:  # Named volume for Data Protection keys
+
+networks:
+  inventory:
+
+secrets:
+  compose-secrets:
+    file: .secrets  # Path to the secrets file

@@ -1,0 +1,89 @@
+# https://learn.microsoft.com/en-us/aspnet/core/test/http-files?view=aspnetcore-9.0
+@BaseUrl = https://inventory-local.example.com/api/v1
+
+### ACCOUNT
+
+### GET
+
+# @name credsrequest
+GET {{BaseUrl}}/Account
+Accept: application/json
+
+### POST
+
+# @name auth
+POST {{BaseUrl}}/Account/token
+Accept: application/json
+ApiKey: {{credsrequest.response.body.$.apikey}}
+
+### SERVER
+
+### GET
+
+# @name server
+GET {{BaseUrl}}/servers
+Accept: application/json
+Authorization: Bearer {{auth.response.body.$.token}}
+
+###
+
+# @name server
+GET {{BaseUrl}}/servers?name=svr&page=1&limit=1
+Accept: application/json
+Authorization: Bearer {{auth.response.body.$.token}}
+
+###
+
+GET {{BaseUrl}}/servers/{{server.response.body.$.result.id}}
+Accept: application/json
+Authorization: Bearer {{auth.response.body.$.token}}
+
+### POST
+
+POST {{BaseUrl}}/servers
+Content-Type: application/json
+Authorization: Bearer {{auth.response.body.$.token}}
+{
+  "Name": "svr_tst_14fd2",
+  "IPAddress": "10.0.0.4",
+  "Scopes": [ {"Scope": "Web"}, {"Scope": "dns"} ],
+  "OS": { "OS": "linux" }
+}
+
+### PUT
+
+PUT {{BaseUrl}}/servers/{{server.response.body.$.result.id}}
+Content-Type: application/json
+Authorization: Bearer {{auth.response.body.$.token}}
+{
+  "id": {{server.response.body.$.result.id}},
+  "Name": "{{server.response.body.$.result.name}}",
+  "IPAddress": "10.0.0.3",
+  "Scopes": [ {"Scope": "sql"}, {"Scope": "dns"} ],
+  "OS": { "OS": "Windows" }
+}
+
+### PATCH
+
+PATCH {{BaseUrl}}/servers/{{server.response.body.$.result.id}}
+Content-Type: application/json
+Authorization: Bearer {{auth.response.body.$.token}}
+{
+  "id": {{server.response.body.$.result.id}},
+  "Name": "{{server.response.body.$.result.name}}",
+  "IPAddress": "{{server.response.body.$.result.ipaddress}}",
+  "Scopes": [ {"Scope": "dns"} ],
+  "OS": { "OS": "Windows" }
+}
+
+### DELETE
+
+DELETE {{BaseUrl}}/servers/{{server.response.body.$.result.id}}
+Accept: application/json
+Authorization: Bearer {{auth.response.body.$.token}}
+
+### OPTIONS
+
+OPTIONS {{BaseUrl}}/servers
+Accept: application/json
+Authorization: Bearer {{auth.response.body.$.token}}

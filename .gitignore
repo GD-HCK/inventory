@@ -1,0 +1,69 @@
+# certificates
+*.pem
+*.pub
+*.key
+*.crt
+*.csr
+*.pfx
+*.p12
+*.jks
+*.p7b
+*.p7c
+*.p7m
+*.p7s
+*.p8
+*.vs
+
+**/.vs
+**/.env
+**/.secrets
+**/*_ignore*
+
+*.exe
+
+# Compiled code
+*.class
+*.o
+*.so
+*.dll
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+
+# development
+*.so
+*$py.class
+target/
+bin/
+obj/
+dist/
+build/
+
+# Temporary files
+tmp/
+temp/
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+### exclusions
+!**/*.template.*
+!**/*.sample*
+!**/*_sample*
+!**/*.template*
+!**/*_template*
+!**/wwwroot/**/
